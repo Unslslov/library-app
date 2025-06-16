@@ -47,7 +47,7 @@ const logout = async () => {
             :to="{ name: 'librarian.reservations.index' }"
             class="block px-4 py-2 rounded-md text-sm font-medium text-gray-300 hover:bg-gray-800 hover:text-blue-400 transition-colors duration-150"
           >
-            Резервации
+            Резервирование
           </router-link>
         </nav>
       </aside>

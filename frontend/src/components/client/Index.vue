@@ -89,7 +89,7 @@ onMounted(() => {
                   @click="resetPassword(client.id)"
                   class="px-3 py-1 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
-                  Сбросить
+                  Сбросить пароль
                 </button>
                 <button
                   @click="deleteClient(client.id)"
