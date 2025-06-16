@@ -34,42 +34,66 @@ cd library-app
 ## ⚙️ Настройка backend (Laravel)
 
 # Перейди в папку backend
+```bash
 cd backend
+```
 
 # Скопируй .env.example в .env
+```bash
 cp .env.example .env
+```
 
 # Установи зависимости через Composer
+```bash
 composer install
+```
 
 # Сгенерируй APP_KEY
+```bash
 php artisan key:generate
+```
 
 # Подними контейнеры Docker (первый запуск)
+```bash
 ./vendor/bin/sail up -d
+```
 
 # Выполни миграции и сиды внутри контейнера
+```bash
 php artisan migrate --seed
+```
 
 # Запустите Laravel проект
+```bash
 php artisan serve
+```
 
 # API будет доступен по адресу: 
+```bash
 http://127.0.0.1:8000/api
+```
 
 ## 🎨 Настройка frontend (Vue + Tailwind)
 
 # Перейди в папку frontend
+```bash
 cd frontend
+```
 
 # Установи зависимости
+```bash
 npm install
+```
 
 # Запустите Vue проект
+```bash
 npm run dev
+```
 
 # Доступен по адресу: 
+```bash
 http://localhost:5174
+```
 
 ## 📡 Примеры API-запросов
 
