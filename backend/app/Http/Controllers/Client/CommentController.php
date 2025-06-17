@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Client;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Comment\StoreRequest;
+use App\Http\Resources\CommentResource;
 use App\Models\Comment;
 use Illuminate\Http\Request;
 
@@ -11,13 +12,12 @@ class CommentController extends Controller
 {
     public function index()
     {
-        return Comment::all();
+        return CommentResource::collection(Comment::all());
     }
 
     public function store(StoreRequest $request)
     {
         $data = $request->validated();
-//        return response()->json(['message' => $data]);
 
         $comment = Comment::create($data);
 

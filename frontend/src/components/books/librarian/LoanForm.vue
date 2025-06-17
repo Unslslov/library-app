@@ -42,7 +42,6 @@
         </button>
       </div>
 
-      <!-- Ошибка -->
       <div v-if="error" class="text-red-500 text-sm">
         {{ error }}
       </div>

@@ -2,7 +2,9 @@
 
 namespace Database\Factories;
 
+use App\Enums\Role;
 use Illuminate\Database\Eloquent\Factories\Factory;
+use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 
@@ -27,16 +29,16 @@ class UserFactory extends Factory
             'name' => fake()->name(),
             'email' => fake()->unique()->safeEmail(),
             'email_verified_at' => now(),
-            'password' => static::$password ??= Hash::make('password'),
+            'password' => static::$password ??= Hash::make(Config::get('user.default_password')),
             'remember_token' => Str::random(10),
-            'role_id' => 3,
+            'role_id' => Role::CLIENT,
         ];
     }
 
     public function firstUser(): static
     {
         return $this->state(fn (array $attributes) => [
-            'role_id' => 1,
+            'role_id' => Role::ADMIN,
 
         ]);
     }
@@ -44,7 +46,7 @@ class UserFactory extends Factory
     public function secondUser(): static
     {
         return $this->state(fn (array $attributes) => [
-            'role_id' => 2,
+            'role_id' => Role::LIBRARIAN,
 
         ]);
     }

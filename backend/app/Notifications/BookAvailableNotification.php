@@ -37,7 +37,7 @@ class BookAvailableNotification extends Notification
             ->subject('Книга "' . $this->book->title . '" снова доступна!')
             ->greeting('Здравствуйте!')
             ->line('Книга, которую вы отслеживали, теперь доступна для бронирования')
-            ->action('Посмотреть книгу', url('api/clients/books/' . $this->book->id))
+            ->action('Посмотреть книгу', url('books/' . $this->book->id))
             ->line('Скорее забронируйте её!')
             ->salutation('С уважением, Администрация библиотеки');
     }

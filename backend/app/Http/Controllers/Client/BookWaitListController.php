@@ -26,7 +26,6 @@ class BookWaitListController extends Controller
             ], 400);
         }
 
-        // Добавляем в список ожидания
         BookWaitlist::create($data);
 
         return response()->json([

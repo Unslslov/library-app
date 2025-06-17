@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Enums\Role;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Client\StoreRequest;
 use App\Http\Requests\Client\UpdateRequest;
@@ -35,7 +36,7 @@ class ClientController extends Controller
             $data['password'] = Hash::make($password);
 
             if (!isset($data['role_id'])) {
-                $data['role_id'] = 3;
+                $data['role_id'] = Role::CLIENT;
             }
 
             $user = User::create($data);
@@ -50,7 +51,6 @@ class ClientController extends Controller
 
     public function show(string $id)
     {
-//        dd($user);
         $user = User::find($id);
 
         return new UserResource($user);

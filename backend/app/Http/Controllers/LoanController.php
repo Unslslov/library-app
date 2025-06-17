@@ -17,7 +17,6 @@ class LoanController extends Controller
     {
         $loans = Loan::with(['book', 'user'])->get();
 
-//        return response()->json($loans);
         return LoanResource::collection($loans);
     }
 
@@ -26,67 +25,28 @@ class LoanController extends Controller
         $data = $request->validated();
 
         $book = Book::find($data['book_id']);
-
-        if (!isset($book)) {
+        if (!$book) {
             return response()->json(['error' => 'Книга не найдена'], 404);
         }
 
-        if ($book->available_copies <= 0) {
-            return response()->json(['error' => 'Копии данной книги закончились'], 400);
+        try {
+            $book->loanTo($data);
+            return response()->json(['message' => 'Клиент получил книгу'], 201);
+        } catch (\Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 400);
         }
-
-        $reservation = Reservation::where('book_id', $data['book_id'])
-            ->where('user_id', $data['user_id'])
-            ->where('status', 'active')
-            ->first();
-
-        if(!$reservation) {
-            return response()->json(['error' => 'пользователь не зарезервировал данную книгу'], 400);
-        }
-
-        $existingLoan = Loan::where('book_id', $data['book_id'])
-            ->where('user_id', $data['user_id'])
-            ->whereNull('returned_at')
-            ->first();
-
-        if($existingLoan) {
-            return response()->json(['error' => 'данная книга уже выдана этому пользователю'], 400);
-        }
-
-        if($reservation->book->available_copies <= 0)
-        {
-            return response()->json(['error' => 'Копии данной книги закончились'], 400);
-        }
-
-
-        $data['loaned_at'] = Carbon::now();
-        $data['reservation_id'] = $reservation->id;
-
-        Loan::create($data);
-//        return response()->json($existingLoan);
-
-        $book->decrement('available_copies');
-
-        return response()->json(['Клиент получил книгу' => 'успех'], 201);
     }
 
-    public function delete(string $id)
+    public function destroy(string $id)
     {
-        $loan = Loan::findOrFail($id);
-        $loan->update(['returned_at' => Carbon::now()]);
+        $loan = Loan::with('book')->findOrFail($id);
+        $book = $loan->book;
 
-        $book = Book::find($loan->book_id);
-        $book->increment('available_copies');
-
-        $reservation = Reservation::find($loan->reservation->id);
-
-        if ($reservation) {
-            $reservation->update(['status' => 'returned']);
+        try {
+            $book->returnFrom($loan);
+            return response()->noContent(204);
+        } catch (\Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
         }
-
-        $reservation->delete();
-        $loan->delete();
-
-        return response()->noContent(204);
     }
 }

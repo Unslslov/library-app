@@ -8,26 +8,35 @@ use App\Models\User;
 use App\Notifications\BookAvailableNotification;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
+use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Facades\Log;
 
 class SendAvailableBookJob implements ShouldQueue
 {
-    use Queueable;
+    use Queueable, SerializesModels;
+
+    protected Book $book;
 
 
-    public function __construct()
+    public function __construct(Book $book)
     {
+        $this->book = $book;
     }
 
     public function handle(): void
     {
-        $books = Book::where('available_copies', '>', 0)->get();
+        if ($this->book->available_copies <= 0) {
+            return;
+        }
 
-        foreach ($books as $book) {
-            $waitlistBooks = BookWaitlist::where('book_id', $book->id)->get();
-            foreach ($waitlistBooks as $waitlistBook) {
-                $waitlistBook->user->notify(new BookAvailableNotification($book));
+        $waitlists = BookWaitlist::where('book_id', $this->book->id)->with('user')->get();
 
-                $waitlistBook->delete();
+        foreach ($waitlists as $waitlist) {
+            try {
+                $waitlist->user->notify(new BookAvailableNotification($this->book));
+                $waitlist->delete();
+            } catch (\Exception $e) {
+                Log::error("Не удалось отправить уведомление пользователю {$waitlist->user_id}: " . $e->getMessage());
             }
         }
     }
