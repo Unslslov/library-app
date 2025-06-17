@@ -7,15 +7,18 @@ use App\Http\Requests\Reservation\UpdateRequest;
 use App\Http\Resources\ReservationResource;
 use App\Models\Book;
 use App\Models\Reservation;
+use App\Services\ReservationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Log;
 
 class ReservationController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
+
+    public function __construct(private ReservationService $reservationService)
+    {
+    }
+
     public function index()
     {
         $reservations = Reservation::with(['book', 'user'])->get();
@@ -25,19 +28,8 @@ class ReservationController extends Controller
 
     public function store(StoreRequest $request)
     {
-        $data = $request->validated();
-
-        $book = Book::find($data['book_id']);
-        if (!$book) {
-            return response()->json(['error' => 'Книга не найдена'], 404);
-        }
-
-        try {
-            $book->reserveFor($data);
-            return response()->json(['message' => 'Книга успешно забронирована'], 201);
-        } catch (\Exception $e) {
-            return response()->json(['error' => $e->getMessage()], 400);
-        }
+        $result = $this->reservationService->createReservation($request->validated());
+        return response()->json(['message' => $result['message']], $result['code']);
     }
 
     public function show(string $id)
@@ -60,21 +52,14 @@ class ReservationController extends Controller
 
     public function destroy(string $id)
     {
-        $reservation = Reservation::find($id);
-
-        $reservation->update(['status' => 'canceled']);
-
-        $reservation->delete();
-
+        $this->reservationService->cancelReservation($id);
         return response()->noContent(204);
     }
 
     public function clientReserve(string $id)
     {
-        $user = \App\Models\User::find($id);
-
-        $reservations = $user->reservations()->with(['book', 'user'])->get();
-
-        return ReservationResource::collection($reservations);
+        return ReservationResource::collection(
+            $this->reservationService->getUserReservations($id)
+        );
     }
 }

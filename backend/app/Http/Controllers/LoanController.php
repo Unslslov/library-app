@@ -8,11 +8,16 @@ use App\Http\Resources\LoanResource;
 use App\Models\Book;
 use App\Models\Loan;
 use App\Models\Reservation;
+use App\Services\LoanService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 
 class LoanController extends Controller
 {
+    public function __construct(private LoanService $loanService)
+    {
+    }
+
     public function index()
     {
         $loans = Loan::with(['book', 'user'])->get();
@@ -22,31 +27,13 @@ class LoanController extends Controller
 
     public function store(LoanBookRequest $request)
     {
-        $data = $request->validated();
-
-        $book = Book::find($data['book_id']);
-        if (!$book) {
-            return response()->json(['error' => 'Книга не найдена'], 404);
-        }
-
-        try {
-            $book->loanTo($data);
-            return response()->json(['message' => 'Клиент получил книгу'], 201);
-        } catch (\Exception $e) {
-            return response()->json(['error' => $e->getMessage()], 400);
-        }
+        $result = $this->loanService->loanBook($request->validated());
+        return response()->json(['message' => $result['message']], $result['code']);
     }
 
     public function destroy(string $id)
     {
-        $loan = Loan::with('book')->findOrFail($id);
-        $book = $loan->book;
-
-        try {
-            $book->returnFrom($loan);
-            return response()->noContent(204);
-        } catch (\Exception $e) {
-            return response()->json(['error' => $e->getMessage()], 500);
-        }
+        $this->loanService->returnBook($id);
+        return response()->noContent(204);
     }
 }

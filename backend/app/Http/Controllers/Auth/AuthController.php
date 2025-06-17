@@ -7,35 +7,25 @@ use App\Http\Requests\Auth\LoginRequest;
 use App\Http\Requests\Auth\RegisterRequest;
 use App\Models\Role;
 use App\Models\User;
+use App\Services\AuthService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
 {
+    public function __construct(private AuthService $authService)
+    {
+    }
     public function login(LoginRequest $request)
     {
-        $request->validated();
+        $credentials = $request->validated();
+        $result = $this->authService->login($credentials['email'], $credentials['password']);
 
-        $user = User::where('email', request('email'))->first();
-
-        if(!$user || !Hash::check(request('password'), $user->password)) {
-            throw ValidationException::withMessages([
-                'email' => ['Неверные учетные записи.'],
-            ]);
-        };
-
-        $token = $user->createToken('token')->plainTextToken;
-
-        return response()->json([
-            'token' => $token,
-            'userId' => $user->id,
-            'userRole' => $user->role->name
-        ]);
+        return response()->json($result);
     }
     public function logout(string $id) {
-        $user = User::find($id);
-        $user->tokens()->delete();
-        return response(null, 204);
+        $this->authService->logout($id);
+        return response()->noContent();
     }
 }

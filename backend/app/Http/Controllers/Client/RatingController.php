@@ -7,49 +7,39 @@ use App\Http\Requests\Rating\StoreRequest;
 use App\Http\Requests\Rating\UpdateRequest;
 use App\Models\Book;
 use App\Models\Rating;
+use App\Services\RatingService;
 use Illuminate\Http\Request;
 
 class RatingController extends Controller
 {
+    public function __construct(private RatingService $ratingService)
+    {
+    }
+
     public function index()
     {
-        $averageRating = Rating::avg('rating');
-
         return response()->json([
-            'average_rating' => round($averageRating, 2)
+            'average_rating' => $this->ratingService->getAverageRating()
         ]);
     }
 
     public function store(StoreRequest $request)
     {
-        $data = $request->validated();
-
-        $book = Book::find($data['book_id']);
-        if (!$book) {
-            return response()->json(['error' => 'Книга не найдена'], 404);
-        }
-
-        try {
-            $book->rateBy($data);
-            return response()->json(['message' => 'Рейтинг успешно создан'], 201);
-        } catch (\Exception $e) {
-            return response()->json(['error' => $e->getMessage()], 400);
-        }
+        $result = $this->ratingService->createRating($request->validated());
+        return isset($result['error'])
+            ? response()->json(['error' => $result['error']], $result['code'])
+            : response()->json(['message' => $result['message']], $result['code']);
     }
 
     public function update(UpdateRequest $request)
     {
-        $data = $request->validated();
-
-        $rating = Rating::update($data);
-
+        $this->ratingService->updateRating($request->validated());
         return response()->noContent(204);
     }
 
     public function destroy(string $id)
     {
-        Rating::destroy($id);
-
+        $this->ratingService->deleteRating($id);
         return response()->noContent(204);
     }
 }

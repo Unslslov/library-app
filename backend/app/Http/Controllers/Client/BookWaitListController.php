@@ -5,31 +5,20 @@ namespace App\Http\Controllers\Client;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\BookWaitlist\StoreRequest;
 use App\Models\BookWaitlist;
+use App\Services\BookWaitlistService;
 use Illuminate\Http\Request;
 
 class BookWaitListController extends Controller
 {
+    public function __construct(private BookWaitlistService $waitlistService)
+    {
+    }
     public function store(StoreRequest $request)
     {
-        $data = $request->validated();
-
-        $userId = $data['user_id'];
-        $bookId = $data['book_id'];
-
-        $exists = BookWaitlist::where('user_id', $userId)
-            ->where('book_id', $bookId)
-            ->exists();
-
-        if ($exists) {
-            return response()->json([
-                'message' => 'Вы уже подписаны на уведомления по этой книге'
-            ], 400);
-        }
-
-        BookWaitlist::create($data);
+        $result = $this->waitlistService->addToWaitlist($request->validated());
 
         return response()->json([
-            'message' => 'Вы успешно добавили книгу в список ожидания'
-        ], 201);
+            'message' => $result['message']
+        ], $result['code']);
     }
 }
